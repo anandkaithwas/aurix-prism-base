@@ -5,7 +5,6 @@ import androidx.media3.common.C
 import androidx.media3.exoplayer.audio.TeeAudioProcessor
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.ln
@@ -19,8 +18,8 @@ import kotlin.math.sqrt
  * hear), tapped through Media3's [TeeAudioProcessor]. No microphone and no permission: Android's own Visualizer API
  * would need the microphone's.
  *
- * Audio samples are captured whenever the playback service sends audio through this processor. Capture is independent
- * of screen visibility; the visualizer UI owns its own frame clock and rendering lifecycle.
+ * Audio samples are captured whenever the playback service feeds this sink. UI rendering remains screen-scoped; the
+ * playback service can analyze audio for automatic Studio decisions while the Studio screen is hidden.
  */
 object VisualizerTap : TeeAudioProcessor.AudioBufferSink {
     /** Mono samples, newest at [written] - 1 (wrapping). */
@@ -30,6 +29,12 @@ object VisualizerTap : TeeAudioProcessor.AudioBufferSink {
     @Volatile private var rate = 44_100
     @Volatile private var channels = 2
     @Volatile private var encoding = C.ENCODING_PCM_16BIT
+
+    /** Compatibility methods: capture follows playback, not screen visibility. */
+    @Deprecated("Audio capture follows playback; screen visibility controls rendering only.")
+    fun listen() = Unit
+    @Deprecated("Audio capture follows playback; screen visibility controls rendering only.")
+    fun stop() = Unit
 
     val sampleRate: Int get() = rate
 
