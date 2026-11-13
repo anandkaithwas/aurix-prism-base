@@ -66,6 +66,7 @@ import com.prism.music.data.prefs.ScrubberThumb
 import com.prism.music.data.prefs.SettingsRepository
 import com.prism.music.data.prefs.TransportStyle
 import com.prism.music.data.prefs.VisualizerStyle
+import com.prism.music.data.prefs.VisualizerMode
 import com.prism.music.data.prefs.VolumeControl
 import com.prism.music.data.prefs.shows
 import com.prism.music.tr
@@ -385,6 +386,7 @@ internal val playerSettings: List<PlayerSetting<*>> by lazy {
             { v -> QueueChip.toMerged(v).joinToString(" · ") { it.label }.ifEmpty { tr(R.string.none) } },
         ) { p, v -> p.setQueueHeadings(v[0]); p.setQueueDjChip(v[1]); p.setQueueLengths(v[2]); p.setQueuePlayedMoves(v[3]); p.setQueueTidy(v[4]) },
         // Modes
+        ps(listOf("visualizer_mode"), g.modes, R.string.visualizer, { it.visualizerMode }, { it.label }) { p, v -> p.setVisualizerMode(v) },
         ps(listOf("visualizer"), g.modes, R.string.visualizer, { it.visualizer }, { it.label }) { p, v -> p.setVisualizer(v) },
         ps(listOf("visualizer_color"), g.modes, R.string.visualizer_color, { it.visualizerColor }, { it.label }) { p, v -> p.setVisualizerColor(v) },
         flag(listOf("immersive_player"), g.modes, R.string.immersive_mode, { it.immersivePlayer }) { p, v -> p.setImmersivePlayer(v) },
