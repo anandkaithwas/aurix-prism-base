@@ -19,11 +19,10 @@ import kotlin.math.sqrt
  * hear), tapped through Media3's [TeeAudioProcessor]. No microphone and no permission: Android's own Visualizer API
  * would need the microphone's.
  *
- * It costs nothing while no visualizer is on screen: [handleBuffer] returns at once unless one is [listen]ing, and the
- * analysis ([Spectrum]) runs on the screen's frames, only while the player that shows it is drawn.
+ * Audio samples are captured whenever the playback service sends audio through this processor. Capture is independent
+ * of screen visibility; the visualizer UI owns its own frame clock and rendering lifecycle.
  */
 object VisualizerTap : TeeAudioProcessor.AudioBufferSink {
-    private val listeners = AtomicInteger(0)
     /** Mono samples, newest at [written] - 1 (wrapping). */
     private val ring = FloatArray(RING)
     @Volatile private var written = 0L
@@ -31,10 +30,6 @@ object VisualizerTap : TeeAudioProcessor.AudioBufferSink {
     @Volatile private var rate = 44_100
     @Volatile private var channels = 2
     @Volatile private var encoding = C.ENCODING_PCM_16BIT
-
-    /** A visualizer came on screen; [stop] when it goes. */
-    fun listen() { listeners.incrementAndGet() }
-    fun stop() { listeners.decrementAndGet() }
 
     val sampleRate: Int get() = rate
 
@@ -45,7 +40,6 @@ object VisualizerTap : TeeAudioProcessor.AudioBufferSink {
     }
 
     override fun handleBuffer(buffer: ByteBuffer) {
-        if (listeners.get() <= 0) return
         val b = buffer.duplicate().order(ByteOrder.nativeOrder())
         val ch = channels
         var w = written
