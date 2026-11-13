@@ -37,6 +37,7 @@ import com.prism.music.data.prefs.ScrubberStyle
 import com.prism.music.data.prefs.ScrubberThumb
 import com.prism.music.data.prefs.TransportStyle
 import com.prism.music.data.prefs.VisualizerStyle
+import com.prism.music.data.prefs.VisualizerMode
 import com.prism.music.data.prefs.VolumeControl
 import com.prism.music.data.prefs.canHide
 import com.prism.music.data.prefs.shows
@@ -439,13 +440,17 @@ internal fun PlayerModesRows() {
 internal fun PlayerVisualizerRows() {
     val s = LocalAppSettings.current
     val prefs = LocalContainer.current.settings
-    val visualizerOn = s.visualizer != VisualizerStyle.OFF
-    PickCardsRow(
-        tr(R.string.visualizer), VisualizerStyle.entries, s.visualizer, { it.label },
-        // Why it doesn't move is a state: it's said with the explanation.
-        info = words(tr(R.string.it_listens_to_prism_s_own), if (visualizerOn && s.reduceMotion) tr(R.string.reduce_motion_is_on_so_it) else null),
-        changed = ch("visualizer"), onPick = { prefs.setVisualizer(it) },
-    ) { VisualizerSample(it, s.visualizerColor) }
+    val visualizerOn = s.visualizerMode == VisualizerMode.AI || s.visualizer != VisualizerStyle.OFF
+    ChoiceRow("Visualizer mode", VisualizerMode.entries, s.visualizerMode, { it.label }, changed = ch("visualizer_mode"), onPick = { prefs.setVisualizerMode(it) })
+    if (s.visualizerMode == VisualizerMode.MANUAL) {
+        PickCardsRow(
+            tr(R.string.visualizer), VisualizerStyle.entries, s.visualizer, { it.label },
+            info = words(tr(R.string.it_listens_to_prism_s_own), if (visualizerOn && s.reduceMotion) tr(R.string.reduce_motion_is_on_so_it) else null),
+            changed = ch("visualizer"), onPick = { prefs.setVisualizer(it) },
+        ) { VisualizerSample(it, s.visualizerColor) }
+    } else {
+        Text("AURIX selects from 125 bass-reactive visual presets and changes them as the music evolves.")
+    }
     if (visualizerOn) ChoiceRow(tr(R.string.visualizer_color), ScrubberColor.entries, s.visualizerColor, { it.label }, changed = ch("visualizer_color")) { prefs.setVisualizerColor(it) }
 }
 

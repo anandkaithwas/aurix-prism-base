@@ -615,9 +615,33 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
     // Runs only while it's picked, the song plays and the player is in view (not under a sheet, not a video, not with
     // Reduce motion): otherwise nothing listens and nothing redraws.
     val vizStyle = settings.visualizer
+    val aiVisualizer = settings.visualizerMode == com.prism.music.data.prefs.VisualizerMode.AI
     val viz = rememberVisualizer(
-        vizStyle != com.prism.music.data.prefs.VisualizerStyle.OFF && !settings.reduceMotion && !covered && !videoMode && isPlaying,
+        (aiVisualizer || vizStyle != com.prism.music.data.prefs.VisualizerStyle.OFF) && !settings.reduceMotion && !covered && !videoMode && isPlaying,
     )
+    LaunchedEffect(viz, aiVisualizer) {
+        if (viz != null && aiVisualizer) {
+            var lastPreset = -1
+            while (true) {
+                val bass = viz.bands.take(4).average().toFloat().coerceIn(0f, 1f)
+                val mids = viz.bands.slice(4..13).average().toFloat().coerceIn(0f, 1f)
+                val highs = viz.bands.slice(14..27).average().toFloat().coerceIn(0f, 1f)
+                viz.autoStyle = when {
+                    bass > 0.62f -> com.prism.music.data.prefs.VisualizerStyle.PARTICLES
+                    bass > 0.40f -> com.prism.music.data.prefs.VisualizerStyle.SPECTRUM_360
+                    highs > mids * 1.25f -> com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC
+                    mids > bass -> com.prism.music.data.prefs.VisualizerStyle.LIQUID
+                    else -> com.prism.music.data.prefs.VisualizerStyle.FRACTAL
+                }
+                var next = kotlin.random.Random.nextInt(125)
+                if (next == lastPreset) next = (next + 1) % 125
+                viz.presetIndex = next
+                lastPreset = next
+                delay(20_000L)
+            }
+        }
+    }
+    val activeVizStyle = if (aiVisualizer) viz?.autoStyle ?: com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC else vizStyle
     val vizBrush: Brush = if (viz == null) androidx.compose.ui.graphics.SolidColor(Color.White) else
         scrubberFill(settings.visualizerColor, songArt)
             ?: Brush.horizontalGradient(*com.prism.music.ui.theme.PrismTokens.spectrumColors(true).toTypedArray())
@@ -761,7 +785,7 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
             Modifier.fillMaxSize().graphicsLayer { alpha = lyricsGroundT }, hold = covered,
         )
         // The visualizer's Glow behind everything, and its Bars along the bottom, under the controls.
-        if (viz != null) when (vizStyle) {
+        if (viz != null) when (activeVizStyle) {
             com.prism.music.data.prefs.VisualizerStyle.GLOW -> VisualizerGlow(viz, vizColor, Modifier.fillMaxSize())
             com.prism.music.data.prefs.VisualizerStyle.BARS -> VisualizerBars(
                 viz, vizBrush,

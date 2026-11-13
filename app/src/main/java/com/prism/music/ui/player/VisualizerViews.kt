@@ -30,6 +30,8 @@ import kotlin.math.sin
  */
 class VisualizerState {
     internal val spectrum = Spectrum()
+    var autoStyle: com.prism.music.data.prefs.VisualizerStyle = com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC
+    var presetIndex: Int = 0
     val bands: FloatArray get() = spectrum.bands
     internal val frameState = mutableLongStateOf(0L)
     internal val levelState = mutableFloatStateOf(0f)
@@ -194,14 +196,15 @@ fun VisualizerAdvanced(state: VisualizerState, style: com.prism.music.data.prefs
         state.frame
         val bands = state.bands
         val beat = state.level.floatValue.coerceIn(0f, 1f)
+        val variant = state.presetIndex
         val cx = size.width / 2f
         val cy = size.height / 2f
         val minR = size.minDimension * 0.12f
         val maxR = size.minDimension * 0.43f
         when (style) {
             com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC -> {
-                val sides = 6
-                for (layer in 0 until 5) {
+                val sides = 3 + (variant % 6)
+                for (layer in 0 until 3 + (variant % 5)) {
                     val radius = minR + layer * size.minDimension * 0.055f + beat * 12f
                     val rotation = state.frame * (0.003f + layer * 0.0007f) * if (layer % 2 == 0) 1f else -1f
                     val path = Path()
@@ -215,8 +218,8 @@ fun VisualizerAdvanced(state: VisualizerState, style: com.prism.music.data.prefs
                 }
             }
             com.prism.music.data.prefs.VisualizerStyle.PARTICLES -> {
-                for (i in 0 until 72) {
-                    val seed = i * 2.3999632f
+                for (i in 0 until 32 + (variant % 97)) {
+                    val seed = i * (2.1f + (variant % 31) * 0.013f)
                     val band = bands[i % bands.size].coerceIn(0f, 1f)
                     val phase = state.frame * (0.012f + (i % 5) * 0.002f) + seed
                     val radius = minR + ((i * 37) % 100) / 100f * (maxR - minR) + band * 28f
@@ -231,7 +234,7 @@ fun VisualizerAdvanced(state: VisualizerState, style: com.prism.music.data.prefs
                     val base = size.height * (0.42f + layer * 0.055f)
                     path.moveTo(0f, size.height)
                     path.lineTo(0f, base)
-                    val steps = 24
+                    val steps = 12 + (variant % 37)
                     for (i in 0..steps) {
                         val x = size.width * i / steps
                         val band = bands[(i * 2 + layer * 7) % bands.size].coerceIn(0f, 1f)
@@ -246,8 +249,9 @@ fun VisualizerAdvanced(state: VisualizerState, style: com.prism.music.data.prefs
             }
             com.prism.music.data.prefs.VisualizerStyle.SPECTRUM_360 -> {
                 val count = bands.size
+                val rotation = (variant % 360) * PI.toFloat() / 180f
                 for (i in 0 until count) {
-                    val angle = -PI.toFloat() / 2f + i * (2f * PI.toFloat() / count)
+                    val angle = -PI.toFloat() / 2f + rotation + i * (2f * PI.toFloat() / count)
                     val value = bands[i].coerceIn(0f, 1f)
                     val inner = minR
                     val outer = inner + 22f + value * size.minDimension * 0.23f
@@ -263,7 +267,7 @@ fun VisualizerAdvanced(state: VisualizerState, style: com.prism.music.data.prefs
                 drawCircle(brush, minR * (0.72f + beat * 0.18f), Offset(cx, cy), style = Stroke(2f * density), alpha = 0.75f)
             }
             com.prism.music.data.prefs.VisualizerStyle.FRACTAL -> {
-                for (layer in 0..7) {
+                for (layer in 0..(4 + variant % 8)) {
                     val radius = minR + layer * size.minDimension * 0.047f
                     val segments = 48
                     val path = Path()

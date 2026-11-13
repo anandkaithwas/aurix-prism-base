@@ -928,6 +928,8 @@ enum class PlayerLayout(val label: String, val note: String) {
 enum class ScrubberThumb(val label: String) { AUTO(tr(R.string.with_the_style)), NONE(tr(R.string.none)), DOT(tr(R.string.dot)), LINE(tr(R.string.line)), RING(tr(R.string.ring)) }
 
 /** How the visualizer moves with the music (1.7.4). */
+enum class VisualizerMode(val label: String) { MANUAL("Choose effect"), AI("AI Select") }
+
 enum class VisualizerStyle(val label: String, val note: String) {
     OFF(tr(R.string.off), tr(R.string.nothing_moves_with_the_music)),
     BARS(tr(R.string.bars), tr(R.string.along_the_bottom_of_the_player)),
@@ -1707,6 +1709,7 @@ data class AppSettings(
      * Prism plays (its own sound, so no microphone), only while the player is on screen.
      */
     val visualizer: VisualizerStyle = VisualizerStyle.OFF,
+    val visualizerMode: VisualizerMode = VisualizerMode.MANUAL,
     val visualizerColor: ScrubberColor = ScrubberColor.SPECTRUM,
     // Gestures on the player's cover and on the mini player.
     val coverSwipeLeft: PlayerGesture = PlayerGesture.NEXT,
@@ -2059,6 +2062,7 @@ class SettingsRepository(
         val hideStatusBarPlayer = booleanPreferencesKey("hide_status_bar_player")
         val playerNavBand = booleanPreferencesKey("player_nav_band")
         val visualizer = stringPreferencesKey("visualizer")
+        val visualizerMode = stringPreferencesKey("visualizer_mode")
         val visualizerColor = stringPreferencesKey("visualizer_color")
         val lyricsStyle = stringPreferencesKey("lyrics_style")
         val lyricsBlurAmount = floatPreferencesKey("lyrics_blur_amount")
@@ -2257,7 +2261,7 @@ class SettingsRepository(
                 immersiveArt, immersiveLyrics, immersiveControls, playerShuffleRepeat, lightStyle,
                 playerLayout, vinylTonearm, playerDeck, playerButtons, scrubberColor, playerTitleAlign, playerTitleSize, playerTitleScroll,
                 playerTimes, meshSpeed, meshIntensity, playerBlur, canvasFillsBackground,
-                scrubberThickness, scrubberThumb, volumeMatchesProgress, playerHandle, playerNavBand, visualizer, visualizerColor,
+                scrubberThickness, scrubberThumb, volumeMatchesProgress, playerHandle, playerNavBand, visualizer, visualizerMode, visualizerColor,
                 lyricsBlur, lyricsScale, lyricsProgressLine, lyricsSourceButton, hideStatusBar, hideStatusBarPlayer,
                 tabNames, navBarSize, navBarFill, miniPlayerJoined, libraryViews, libraryColumns, librarySubtitles,
                 homeHeader, homeHeaderHeight,
@@ -2295,7 +2299,7 @@ class SettingsRepository(
                 showPlayingFrom to 'b', playerShuffleRepeat to 'b', immersiveArt to 's', immersiveLyrics to 's', immersiveControls to 'b',
                 playerLayout to 's', vinylTonearm to 'b', playerDeck to 's', playerButtons to 's', scrubberColor to 's', playerTitleAlign to 's',
                 playerTitleSize to 's', playerTitleScroll to 'b', playerTimes to 's', meshSpeed to 'f', meshIntensity to 'f', playerBlur to 'f',
-                canvasFillsBackground to 'b', scrubberThickness to 'f', scrubberThumb to 's', visualizer to 's', visualizerColor to 's',
+                canvasFillsBackground to 'b', scrubberThickness to 'f', scrubberThumb to 's', visualizer to 's', visualizerMode to 's', visualizerColor to 's',
                 volumeMatchesProgress to 'b', playerHandle to 'b', hideStatusBarPlayer to 'b', playerNavBand to 'b',
                 lyricsAlign to 's', lyricsBlur to 'b', lyricsProgressLine to 'b', lyricsSourceButton to 'b', lyricsScale to 'f',
                 libraryView to 's', libraryViews to 's', libraryColumns to 's', librarySubtitles to 'b', playlistHeroCover to 'b',
@@ -2775,6 +2779,7 @@ class SettingsRepository(
             hideStatusBarPlayer = p[K.hideStatusBarPlayer] ?: d.hideStatusBarPlayer,
             playerNavBand = p[K.playerNavBand] ?: d.playerNavBand,
             visualizer = p.enum(K.visualizer, d.visualizer),
+            visualizerMode = p.enum(K.visualizerMode, d.visualizerMode),
             visualizerColor = p.enum(K.visualizerColor, d.visualizerColor),
             lyricsLook = LyricsLookPrefs(
                 style = p.enum(K.lyricsStyle, d.lyricsStyle),
@@ -3318,6 +3323,7 @@ class SettingsRepository(
     fun setHideStatusBarPlayer(v: Boolean) = edit { it[K.hideStatusBarPlayer] = v }
     fun setPlayerNavBand(v: Boolean) = edit { it[K.playerNavBand] = v }
     fun setVisualizer(v: VisualizerStyle) = edit { it[K.visualizer] = v.name }
+    fun setVisualizerMode(v: VisualizerMode) = edit { it[K.visualizerMode] = v.name }
     fun setVisualizerColor(v: ScrubberColor) = edit { it[K.visualizerColor] = v.name }
     fun setLyricsStyle(v: LyricsStyle) = edit { it[K.lyricsStyle] = v.name }
     /** The blur's strength; the old switch follows (on above none), so older code paths and Looks agree. */
