@@ -15,6 +15,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Prism"
+rootProject.name = "AURIX"
 include(":app")
 include(":baselineprofile")

@@ -22,11 +22,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.prism.music"
+        applicationId = "com.aurix.music"
         minSdk = 26
         targetSdk = 36
-        versionCode = 63
-        versionName = "1.8.5"
+        versionCode = 1
+        versionName = "0.1.0"
         vectorDrawables { useSupportLibrary = true }
         // The name under the launcher icon; a side-by-side build (below) is called "Prism Dev" so it can't be mistaken for Prism.
         manifestPlaceholders["appLabel"] = "@string/app_name"
@@ -72,7 +72,7 @@ android {
             // "Prism Dev". `-PsideBySide=name` installs as com.prism.music.name instead of .dev, beside an older dev copy.
             if (project.hasProperty("sideBySide")) {
                 applicationIdSuffix = "." + (project.property("sideBySide") as String).ifBlank { "dev" }
-                manifestPlaceholders["appLabel"] = (project.findProperty("sideByLabel") as String?) ?: "Prism Dev"
+                manifestPlaceholders["appLabel"] = (project.findProperty("sideByLabel") as String?) ?: "AURIX Dev"
             }
             // `-PsingBench`: not debuggable, so Sing's speed test (SingSpeedTest) times Prism's own code as a release
             // runs it (a debuggable app's Kotlin ran Sing's transforms several times slower on the A16).
