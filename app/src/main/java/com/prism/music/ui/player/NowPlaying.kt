@@ -767,6 +767,11 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
                 viz, vizBrush,
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(0.2f).padding(horizontal = 12.dp).navigationBarsPadding().inked(),
             )
+            com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC,
+            com.prism.music.data.prefs.VisualizerStyle.PARTICLES,
+            com.prism.music.data.prefs.VisualizerStyle.LIQUID,
+            com.prism.music.data.prefs.VisualizerStyle.SPECTRUM_360,
+            com.prism.music.data.prefs.VisualizerStyle.FRACTAL -> VisualizerAdvanced(viz, vizStyle, vizBrush, Modifier.fillMaxSize())
             else -> {}
         }
         // Settings → Player → Background → "Animated cover fills the player" (1.7.4): the clip plays behind everything,

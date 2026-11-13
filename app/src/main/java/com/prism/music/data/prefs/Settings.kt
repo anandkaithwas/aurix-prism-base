@@ -935,6 +935,11 @@ enum class VisualizerStyle(val label: String, val note: String) {
     RING(tr(R.string.ring), tr(R.string.around_the_cover)),
     PULSE(tr(R.string.pulse), tr(R.string.the_progress_bar_pulses_with_the)),
     GLOW(tr(R.string.glow), tr(R.string.the_background_breathes_with_the_music)),
+    GEOMETRIC("Geometric Motion", "Rotating geometry responds to the spectrum"),
+    PARTICLES("Particle Storm", "A field of particles moves with the beat"),
+    LIQUID("Liquid Motion", "Fluid waves react to the music"),
+    SPECTRUM_360("Spectrum 360", "A circular spectrum around the screen"),
+    FRACTAL("Fractal Dreams", "Layered radial patterns pulse with the music"),
 }
 
 /** The parts under the player's title, in the order the listener arranged them. */

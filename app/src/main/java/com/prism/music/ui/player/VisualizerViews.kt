@@ -183,3 +183,104 @@ fun VisualizerGlow(state: VisualizerState, color: Color, modifier: Modifier) {
         )
     }
 }
+
+/**
+ * AURIX Visualizer Studio's additional GPU-light effects. All motion is driven by the existing playback spectrum;
+ * no microphone permission or separate audio capture is used.
+ */
+@Composable
+fun VisualizerAdvanced(state: VisualizerState, style: com.prism.music.data.prefs.VisualizerStyle, brush: Brush, modifier: Modifier) {
+    Canvas(modifier) {
+        state.frame
+        val bands = state.bands
+        val beat = state.level.floatValue.coerceIn(0f, 1f)
+        val cx = size.width / 2f
+        val cy = size.height / 2f
+        val minR = size.minDimension * 0.12f
+        val maxR = size.minDimension * 0.43f
+        when (style) {
+            com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC -> {
+                val sides = 6
+                for (layer in 0 until 5) {
+                    val radius = minR + layer * size.minDimension * 0.055f + beat * 12f
+                    val rotation = state.frame * (0.003f + layer * 0.0007f) * if (layer % 2 == 0) 1f else -1f
+                    val path = Path()
+                    for (i in 0..sides) {
+                        val angle = rotation + i * (2f * PI.toFloat() / sides)
+                        val r = radius + (bands[(i * 4 + layer) % bands.size].coerceIn(0f, 1f) * 18f)
+                        val p = Offset(cx + kotlin.math.cos(angle) * r, cy + kotlin.math.sin(angle) * r)
+                        if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y)
+                    }
+                    drawPath(path, brush, style = Stroke(width = (1.4f + layer * 0.45f) * density), alpha = 0.75f - layer * 0.09f)
+                }
+            }
+            com.prism.music.data.prefs.VisualizerStyle.PARTICLES -> {
+                for (i in 0 until 72) {
+                    val seed = i * 2.3999632f
+                    val band = bands[i % bands.size].coerceIn(0f, 1f)
+                    val phase = state.frame * (0.012f + (i % 5) * 0.002f) + seed
+                    val radius = minR + ((i * 37) % 100) / 100f * (maxR - minR) + band * 28f
+                    val x = cx + kotlin.math.cos(phase) * radius
+                    val y = cy + kotlin.math.sin(phase * 1.13f) * radius
+                    drawCircle(brush, (1.2f + band * 3.2f) * density, Offset(x, y), alpha = 0.35f + band * 0.6f)
+                }
+            }
+            com.prism.music.data.prefs.VisualizerStyle.LIQUID -> {
+                for (layer in 0..3) {
+                    val path = Path()
+                    val base = size.height * (0.42f + layer * 0.055f)
+                    path.moveTo(0f, size.height)
+                    path.lineTo(0f, base)
+                    val steps = 24
+                    for (i in 0..steps) {
+                        val x = size.width * i / steps
+                        val band = bands[(i * 2 + layer * 7) % bands.size].coerceIn(0f, 1f)
+                        val wave = kotlin.math.sin(i * 0.48f + state.frame * 0.035f + layer) * (8f + band * 32f)
+                        val y = base + wave - band * 18f
+                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                    }
+                    path.lineTo(size.width, size.height)
+                    path.close()
+                    drawPath(path, brush, alpha = 0.13f + layer * 0.07f)
+                }
+            }
+            com.prism.music.data.prefs.VisualizerStyle.SPECTRUM_360 -> {
+                val count = bands.size
+                for (i in 0 until count) {
+                    val angle = -PI.toFloat() / 2f + i * (2f * PI.toFloat() / count)
+                    val value = bands[i].coerceIn(0f, 1f)
+                    val inner = minR
+                    val outer = inner + 22f + value * size.minDimension * 0.23f
+                    drawLine(
+                        brush,
+                        Offset(cx + kotlin.math.cos(angle) * inner, cy + kotlin.math.sin(angle) * inner),
+                        Offset(cx + kotlin.math.cos(angle) * outer, cy + kotlin.math.sin(angle) * outer),
+                        strokeWidth = (2f + value * 3f) * density,
+                        alpha = 0.45f + value * 0.55f,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    )
+                }
+                drawCircle(brush, minR * (0.72f + beat * 0.18f), Offset(cx, cy), style = Stroke(2f * density), alpha = 0.75f)
+            }
+            com.prism.music.data.prefs.VisualizerStyle.FRACTAL -> {
+                for (layer in 0..7) {
+                    val radius = minR + layer * size.minDimension * 0.047f
+                    val segments = 48
+                    val path = Path()
+                    for (i in 0..segments) {
+                        val angle = i * (2f * PI.toFloat() / segments)
+                        val band = bands[(i + layer * 3) % bands.size].coerceIn(0f, 1f)
+                        val modulation = 1f + 0.16f * kotlin.math.sin(angle * 6f + state.frame * 0.018f + layer) + band * 0.28f
+                        val r = radius * modulation * (1f + beat * 0.06f)
+                        val x = cx + kotlin.math.cos(angle) * r
+                        val y = cy + kotlin.math.sin(angle) * r
+                        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                    }
+                    path.close()
+                    drawPath(path, brush, style = Stroke((1f + layer * 0.25f) * density), alpha = 0.62f - layer * 0.045f)
+                }
+            }
+            else -> Unit
+        }
+    }
+}
