@@ -229,6 +229,32 @@ internal fun shelfKind(shelf: Shelf): String? {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun VisualizerStudioHomeCard(onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(22.dp))
+            .background(Brush.linearGradient(listOf(Color(0xFF063B3B), Color(0xFF102B45), Color(0xFF17213D))))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(48.dp).clip(RoundedCornerShape(15.dp))
+                .background(Color(0xFF19D6C5).copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("♫", color = Color(0xFF63F4E5), style = MaterialTheme.typography.headlineMedium)
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text("AURIX Visualizer Studio", color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text("125 bass-reactive presets · Manual or AI", color = Color.White.copy(alpha = 0.78f), style = MaterialTheme.typography.bodySmall)
+        }
+        Text("›", color = Color(0xFF63F4E5), style = MaterialTheme.typography.headlineMedium)
+    }
+}
+
+@Composable
 fun HomeScreen(bottomPadding: androidx.compose.ui.unit.Dp) {
     val c = LocalContainer.current
     val nav = LocalNavigator.current
@@ -444,6 +470,7 @@ fun HomeScreen(bottomPadding: androidx.compose.ui.unit.Dp) {
     ) {
         LazyColumn(Modifier.fillMaxSize(), state = list, contentPadding = PaddingValues(bottom = bottomPadding + 16.dp)) {
             item { HomeTopBar() }
+            item(key = "aurix_visualizer_studio") { VisualizerStudioHomeCard { nav.go(Routes.settings("player")) } }
             item(key = "update") { UpdateBanner() }
             item(key = "performance") { PerformanceOffer() }
             item(key = "smartDownloads") { SmartDownloadsOffer() }
