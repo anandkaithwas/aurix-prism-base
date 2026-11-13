@@ -19,7 +19,7 @@ room {
 
 android {
     namespace = "com.prism.music"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.aurix.music"
