@@ -441,7 +441,7 @@ internal fun PlayerVisualizerRows() {
     val s = LocalAppSettings.current
     val prefs = LocalContainer.current.settings
     val visualizerOn = s.visualizerMode == VisualizerMode.AI || s.visualizer != VisualizerStyle.OFF
-    ChoiceRow("Visualizer mode", VisualizerMode.entries, s.visualizerMode, { it.label }, changed = ch("visualizer_mode"), onPick = { prefs.setVisualizerMode(it) })
+    ChoiceRow("Visualizer mode", VisualizerMode.entries, s.visualizerMode, { it.label }, changed = ch("visualizer_mode")) { prefs.setVisualizerMode(it) }
     if (s.visualizerMode == VisualizerMode.MANUAL) {
         PickCardsRow(
             tr(R.string.visualizer), VisualizerStyle.entries, s.visualizer, { it.label },
