@@ -111,7 +111,7 @@ class UpdateChecker(private val context: Context, private val http: OkHttpClient
 
     private fun fetch() {
         val req = Request.Builder().url("https://api.github.com/repos/$REPO/releases/latest")
-            .header("Accept", "application/vnd.github+json").header("User-Agent", "Prism/${BuildConfig.VERSION_NAME}")
+            .header("Accept", "application/vnd.github+json").header("User-Agent", "AURIX/${BuildConfig.VERSION_NAME}")
             // GitHub answers "not modified" when the latest release is the one seen last time (and doesn't count it
             // against its hourly limit), so asking every hour costs next to nothing.
             .apply { prefs.getString("etag", null)?.takeIf { _available.value != null || prefs.contains("latest_version") }?.let { header("If-None-Match", it) } }
@@ -139,11 +139,11 @@ class UpdateChecker(private val context: Context, private val http: OkHttpClient
 
     /** The latest version from where github.com/…/releases/latest redirects to. False when it can't tell. */
     private fun fetchFromReleasePage(): Boolean = runCatching {
-        val req = Request.Builder().url("https://github.com/$REPO/releases/latest").header("User-Agent", "Prism/${BuildConfig.VERSION_NAME}").build()
+        val req = Request.Builder().url("https://github.com/$REPO/releases/latest").header("User-Agent", "AURIX/${BuildConfig.VERSION_NAME}").build()
         http.newBuilder().followRedirects(false).followSslRedirects(false).build().newCall(req).execute().use { r ->
             val version = versionFromLatestRedirect(r.header("Location")) ?: return@use false
             prefs.edit().putString("latest_version", version)
-                .putString("latest_url", "https://github.com/$REPO/releases/download/v$version/Prism.apk")
+                .putString("latest_url", "https://github.com/$REPO/releases/download/v$version/AURIX.apk")
                 .putLong("checked_at", System.currentTimeMillis()).apply()
             _available.value = saved()
             true
@@ -187,7 +187,7 @@ class UpdateChecker(private val context: Context, private val http: OkHttpClient
             }
             result.exceptionOrNull()?.let { e ->
                 if (!isActive) return@let
-                _progress.value = if (e is SignatureChanged) UpdateProgress.NewSignature(update.version, File(dir, "Prism-${update.version}.apk"))
+                _progress.value = if (e is SignatureChanged) UpdateProgress.NewSignature(update.version, File(dir, "AURIX-${update.version}.apk"))
                 else UpdateProgress.Failed(e.friendlyMessage(tr(R.string.the_update_didn_t_download)))
             }
         }
@@ -198,7 +198,7 @@ class UpdateChecker(private val context: Context, private val http: OkHttpClient
         val file = File(dir, "Prism-${update.version}.apk")
         if (file.exists()) return file
         val part = File(dir, file.name + ".part")
-        val req = Request.Builder().url(update.url).header("User-Agent", "Prism/${BuildConfig.VERSION_NAME}").build()
+        val req = Request.Builder().url(update.url).header("User-Agent", "AURIX/${BuildConfig.VERSION_NAME}").build()
         http.newCall(req).execute().use { r ->
             if (!r.isSuccessful) error(tr(R.string.github_answered, r.code))
             val body = r.body
@@ -279,12 +279,12 @@ class UpdateChecker(private val context: Context, private val http: OkHttpClient
         }
         val id = installer.createSession(params)
         installer.openSession(id).use { session ->
-            session.openWrite("Prism.apk", 0, apk.length()).use { out ->
+            session.openWrite("AURIX.apk", 0, apk.length()).use { out ->
                 apk.inputStream().use { it.copyTo(out) }
                 session.fsync(out)
             }
             // Named after the APK: that's how Android pairs the two.
-            if (profile != null) session.openWrite("Prism.dm", 0, profile.length()).use { out ->
+            if (profile != null) session.openWrite("AURIX.dm", 0, profile.length()).use { out ->
                 profile.inputStream().use { it.copyTo(out) }
                 session.fsync(out)
             }
@@ -320,7 +320,7 @@ class UpdateChecker(private val context: Context, private val http: OkHttpClient
             if (!writer.deviceAllowsProfileInstallerAotWrites() || !writer.read().transcodeIfNeeded().write()) return null
             val bytes = prof.readBytes().also { prof.delete() }
             if (bytes.isEmpty()) return null
-            File(dir, "Prism.dm").apply {
+            File(dir, "AURIX.dm").apply {
                 ZipOutputStream(outputStream()).use { zip ->
                     zip.putNextEntry(ZipEntry("primary.prof").apply {
                         method = ZipEntry.STORED
@@ -383,7 +383,7 @@ class UpdateChecker(private val context: Context, private val http: OkHttpClient
     enum class InstallStep { START, WAIT, REOPEN }
 
     companion object {
-        const val REPO = "Yigder/Prism"
+        const val REPO = "anandkaithwas/aurix-prism-base"
 
         /** How long between background checks (#278: was six hours). */
         const val CHECK_EVERY_MS = 3_600_000L
