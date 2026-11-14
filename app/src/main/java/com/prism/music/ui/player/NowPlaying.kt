@@ -642,6 +642,19 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
         }
     }
     val activeVizStyle = if (aiVisualizer) viz?.autoStyle ?: com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC else vizStyle
+    // AURIX: show each track's artwork for five seconds, then fade into its live visualizer.
+    var visualizerTakeover by remember(song.id) { mutableStateOf(false) }
+    LaunchedEffect(song.id, viz != null) {
+        if (viz != null && !visualizerTakeover) {
+            delay(5_000L)
+            visualizerTakeover = true
+        }
+    }
+    val artworkVisualizerAlpha by animateFloatAsState(
+        targetValue = if (viz != null && visualizerTakeover) 0f else 1f,
+        animationSpec = tween(900, easing = FastOutSlowInEasing),
+        label = "visualizerArtworkFade",
+    )
     val vizBrush: Brush = if (viz == null) androidx.compose.ui.graphics.SolidColor(Color.White) else
         scrubberFill(settings.visualizerColor, songArt)
             ?: Brush.horizontalGradient(*com.prism.music.ui.theme.PrismTokens.spectrumColors(true).toTypedArray())
@@ -1149,6 +1162,7 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
                                         !settings.shows(PlayerPart.COVER) -> p()
                                         else -> 1f
                                     }
+                                    alpha *= artworkVisualizerAlpha
                                 }
                                 // A record keeps its own round shadow and clip (the tonearm reaches past its edge); a
                                 // tape draws its own shell.
