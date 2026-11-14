@@ -7,6 +7,7 @@ import androidx.compose.runtime.FloatState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
@@ -30,7 +31,7 @@ import kotlin.math.sin
  */
 class VisualizerState {
     internal val spectrum = Spectrum()
-    var autoStyle: com.prism.music.data.prefs.VisualizerStyle = com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC
+    var autoStyle: com.prism.music.data.prefs.VisualizerStyle by mutableStateOf(com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC)
     var presetIndex: Int = 0
     val bands: FloatArray get() = spectrum.bands
     internal val frameState = mutableLongStateOf(0L)
@@ -202,6 +203,44 @@ fun VisualizerAdvanced(state: VisualizerState, style: com.prism.music.data.prefs
         val minR = size.minDimension * 0.12f
         val maxR = size.minDimension * 0.43f
         when (style) {
+            com.prism.music.data.prefs.VisualizerStyle.RING -> {
+                val count = bands.size * 2
+                val base = size.minDimension * 0.19f
+                val reach = size.minDimension * 0.24f
+                for (i in 0 until count) {
+                    val band = bands[if (i < bands.size) i else count - 1 - i].coerceIn(0f, 1f)
+                    val angle = -PI.toFloat() / 2f + i * (2f * PI.toFloat() / count)
+                    val inner = base
+                    val outer = inner + reach * (0.12f + band * 0.88f)
+                    drawLine(
+                        brush,
+                        Offset(cx + kotlin.math.cos(angle) * inner, cy + kotlin.math.sin(angle) * inner),
+                        Offset(cx + kotlin.math.cos(angle) * outer, cy + kotlin.math.sin(angle) * outer),
+                        strokeWidth = (2.2f + band * 2.8f) * density,
+                        alpha = 0.72f + band * 0.28f,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    )
+                }
+                drawCircle(brush, base * (0.55f + beat * 0.18f), Offset(cx, cy), style = Stroke(2.5f * density), alpha = 0.8f)
+            }
+            com.prism.music.data.prefs.VisualizerStyle.PULSE -> {
+                val pulseRadius = size.minDimension * (0.12f + beat * 0.12f)
+                for (layer in 0..3) {
+                    val radius = pulseRadius + layer * size.minDimension * 0.075f
+                    drawCircle(
+                        brush, radius, Offset(cx, cy),
+                        style = Stroke((2.5f + beat * 2f) * density),
+                        alpha = (0.62f - layer * 0.12f).coerceIn(0.12f, 0.7f),
+                    )
+                }
+                val barY = size.height * 0.82f
+                val barW = size.width / bands.size * 0.55f
+                bands.forEachIndexed { i, value ->
+                    val x = i * size.width / bands.size
+                    val h = size.height * 0.12f * value
+                    drawLine(brush, Offset(x + barW / 2f, barY - h), Offset(x + barW / 2f, barY + h), (2f + value * 2f) * density, alpha = 0.72f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                }
+            }
             com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC -> {
                 val sides = 3 + (variant % 6)
                 for (layer in 0 until 3 + (variant % 5)) {

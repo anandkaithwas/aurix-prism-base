@@ -614,8 +614,12 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
     // ---------------------------------------------------------------- Visualizer (1.7.4, off by default)
     // Runs only while it's picked, the song plays and the player is in view (not under a sheet, not a video, not with
     // Reduce motion): otherwise nothing listens and nothing redraws.
-    val vizStyle = settings.visualizer
     val aiVisualizer = settings.visualizerMode == com.prism.music.data.prefs.VisualizerMode.AI
+    val storedVizStyle = settings.visualizer
+    val vizStyle = if (!aiVisualizer && storedVizStyle == com.prism.music.data.prefs.VisualizerStyle.OFF) com.prism.music.data.prefs.VisualizerStyle.BARS else storedVizStyle
+    LaunchedEffect(storedVizStyle, aiVisualizer, isPlaying) {
+        if (!aiVisualizer && isPlaying && storedVizStyle == com.prism.music.data.prefs.VisualizerStyle.OFF) LocalContainer.current.settings.setVisualizer(com.prism.music.data.prefs.VisualizerStyle.BARS)
+    }
     val viz = rememberVisualizer(
         (aiVisualizer || vizStyle != com.prism.music.data.prefs.VisualizerStyle.OFF) && !settings.reduceMotion && !covered && !videoMode && isPlaying,
     )
@@ -804,6 +808,8 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
                 viz, vizBrush,
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(0.2f).padding(horizontal = 12.dp).navigationBarsPadding().inked(),
             )
+            com.prism.music.data.prefs.VisualizerStyle.RING,
+            com.prism.music.data.prefs.VisualizerStyle.PULSE,
             com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC,
             com.prism.music.data.prefs.VisualizerStyle.PARTICLES,
             com.prism.music.data.prefs.VisualizerStyle.LIQUID,
@@ -1136,15 +1142,7 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
                         // A hidden cover (What's on the player, 1.8.0) isn't drawn at all until it shrinks into the header:
                         // no animated cover decoding, no record or tape turning, no blend or ring around nothing.
                         val coverAway = !settings.drawsCover(collapsePastHalf)
-                        // The visualizer's Ring, behind the cover (it reaches out past the edge).
-                        if (viz != null && vizStyle == com.prism.music.data.prefs.VisualizerStyle.RING && !collapsePastHalf && !heroMode && !coverAway) {
-                            // A tape is wider than tall, with its own corners (Cassette.kt).
-                            val cornerPx = with(LocalDensity.current) { if (cassette) 0f else artCorners.toPx() }
-                            VisualizerRing(
-                                viz, vizBrush, round = vinyl, cornerPx = cornerPx, modifier = Modifier.matchParentSize(),
-                                aspect = if (cassette) CASSETTE_ASPECT else 1f,
-                            )
-                        }
+                        // Ring is rendered as a full-screen spectrum in Studio; do not tie it to cover visibility.
                         // The cover flying in from the mini player lands here (#199): where it is, and unseen until then.
                         val flightTarget = !vinyl && !cassette && !heroMode && !videoMode
                         // #223: nothing to fly back from when it isn't this cover that's showing.
