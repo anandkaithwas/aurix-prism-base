@@ -12,6 +12,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlinx.coroutines.launch
 
 /**
  * The visualizer's ear (1.7.4): the last end of Prism's own audio chain (after the normalizer, so it's the sound you
@@ -209,7 +210,7 @@ object StudioAudioAnalyzer {
             var candidate = previousStyle
             var candidateFrames = 0
             var energyAverage = 0f
-            while (kotlin.coroutines.coroutineContext.isActive) {
+            while (true) {
                 val started = android.os.SystemClock.elapsedRealtime()
                 spectrum.update(80f)
                 val bands = spectrum.bands.toList()

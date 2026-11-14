@@ -424,6 +424,7 @@ open class PlaybackService : MediaLibraryService(), Player.Listener {
             }
 
             override fun afterCasting() {
+                updateStudioAnalysis()
                 val now = player.currentMediaItem?.toSong()
                 if (now?.isEpisode == true && episodeSpeed != 1f) player.setPlaybackSpeed(episodeSpeed)
                 else if (now != null && !now.isEpisode && !now.isLive && musicSpeed != 1f) player.setPlaybackSpeed(musicSpeed)
@@ -620,6 +621,7 @@ open class PlaybackService : MediaLibraryService(), Player.Listener {
             applyLiveVideo()
             updateButtons()
             scheduleSave()
+            updateStudioAnalysis()
             return
         }
         // Next pressed (or a song picked) before this one had its say: a skip, for recommendations' sake.
