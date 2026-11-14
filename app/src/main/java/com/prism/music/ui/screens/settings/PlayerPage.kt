@@ -393,7 +393,7 @@ internal fun PlayerModesRows() {
     val b = s.behavior
     PlayerVisualizerRows()
     val navigator = LocalNavigator.current
-    com.prism.music.ui.components.LinkRow("Visualizer Studio", "Preview and simplify your music visuals") { navigator.go(Routes.VISUALIZER_STUDIO) }
+    LinkRow("Visualizer Studio", value = "Preview and simplify your music visuals") { navigator.go(Routes.VISUALIZER_STUDIO) }
 
     SwitchRow(
         tr(R.string.immersive_mode), s.immersivePlayer, info = words(tr(R.string.the_cover_fills_the_screen_lyrics), tr(R.string.like_a_lyric_video_tap_the)),
