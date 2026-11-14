@@ -126,6 +126,7 @@ import com.prism.music.ui.screens.CatalogueScreen
 import com.prism.music.ui.screens.CollectionScreen
 import com.prism.music.ui.screens.CollectionType
 import com.prism.music.ui.screens.EqualizerScreen
+import com.prism.music.ui.screens.VisualizerStudioScreen
 import com.prism.music.ui.screens.HomeScreen
 import com.prism.music.ui.screens.LibraryScreen
 import com.prism.music.ui.screens.LoginScreen
@@ -758,6 +759,7 @@ private fun PrismRoot(deepLink: MutableStateFlow<Uri?>) {
                             }
                         }
                         composable(Routes.EQ) { ScreenBackdrop(BackdropScreen.SETTINGS) { EqualizerScreen(bottomPadding) } }
+                        composable(Routes.VISUALIZER_STUDIO) { ScreenBackdrop(BackdropScreen.SETTINGS) { VisualizerStudioScreen(bottomPadding) } }
                         composable(Routes.CATALOGUE + "?find={find}", listOf(navArgument("find") { type = NavType.StringType; nullable = true; defaultValue = null })) { ScreenBackdrop(BackdropScreen.HOME) { CatalogueScreen(bottomPadding) } }
                         composable(Routes.MOODS) { ScreenBackdrop(BackdropScreen.SEARCH) { com.prism.music.ui.screens.MoodsScreen(bottomPadding) } }
                         composable(Routes.EXPLORE) { ScreenBackdrop(BackdropScreen.SEARCH) { com.prism.music.ui.screens.ExploreScreen(bottomPadding) } }

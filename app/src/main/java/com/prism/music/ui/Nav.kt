@@ -28,6 +28,7 @@ object Routes {
     const val REPLAY = "replay"
     const val SETTINGS = "settings"
     const val EQ = "eq"
+    const val VISUALIZER_STUDIO = "visualizer_studio"
     const val CATALOGUE = "catalogue"
     const val LOGIN = "login"
     /** Signs another Google account in beside the current one (to switch between them). */
