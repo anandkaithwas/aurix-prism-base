@@ -37,7 +37,6 @@ import com.prism.music.data.prefs.ScrubberStyle
 import com.prism.music.data.prefs.ScrubberThumb
 import com.prism.music.data.prefs.TransportStyle
 import com.prism.music.data.prefs.VisualizerStyle
-import com.prism.music.data.prefs.VisualizerMode
 import com.prism.music.data.prefs.VolumeControl
 import com.prism.music.data.prefs.canHide
 import com.prism.music.data.prefs.shows
@@ -391,9 +390,15 @@ internal fun PlayerModesRows() {
     val prefs = LocalContainer.current.settings
     val context = LocalContext.current
     val b = s.behavior
-    PlayerVisualizerRows()
     val navigator = LocalNavigator.current
-    LinkRow("Visualizer Studio", value = "Preview and simplify your music visuals") { navigator.go(Routes.VISUALIZER_STUDIO) }
+    val visualizerSummary = if (s.visualizerMode == com.prism.music.data.prefs.VisualizerMode.AI) {
+        "Auto · changes with the music"
+    } else if (s.visualizer == VisualizerStyle.OFF) {
+        "Off · choose an effect"
+    } else {
+        "Manual · ${s.visualizer.label}"
+    }
+    LinkRow("Visualizer", value = visualizerSummary) { navigator.go(Routes.VISUALIZER_STUDIO) }
 
     SwitchRow(
         tr(R.string.immersive_mode), s.immersivePlayer, info = words(tr(R.string.the_cover_fills_the_screen_lyrics), tr(R.string.like_a_lyric_video_tap_the)),
@@ -435,25 +440,6 @@ internal fun PlayerModesRows() {
 
     // #265: the TV's ambient screen on a phone at its stand.
     SwitchRow(tr(R.string.desk_mode), s.tv.deskMode, info = words(tr(R.string.desk_mode_detail), tr(R.string.desk_mode_info)), changed = ch("desk_mode")) { prefs.setDeskMode(it) }
-}
-
-/** The visualizer's rows, the first of Modes: on the page, and in "Customize this" for the player. */
-@Composable
-internal fun PlayerVisualizerRows() {
-    val s = LocalAppSettings.current
-    val prefs = LocalContainer.current.settings
-    val visualizerOn = s.visualizerMode == VisualizerMode.AI || s.visualizer != VisualizerStyle.OFF
-    ChoiceRow("Visualizer mode", VisualizerMode.entries, s.visualizerMode, { it.label }, changed = ch("visualizer_mode")) { prefs.setVisualizerMode(it) }
-    if (s.visualizerMode == VisualizerMode.MANUAL) {
-        PickCardsRow(
-            tr(R.string.visualizer), VisualizerStyle.entries, s.visualizer, { it.label },
-            info = words(tr(R.string.it_listens_to_prism_s_own), if (visualizerOn && s.reduceMotion) tr(R.string.reduce_motion_is_on_so_it) else null),
-            changed = ch("visualizer"), onPick = { prefs.setVisualizer(it) },
-        ) { VisualizerSample(it, s.visualizerColor) }
-    } else {
-        Text("AURIX selects from 125 bass-reactive visual presets and changes them as the music evolves.")
-    }
-    if (visualizerOn) ChoiceRow(tr(R.string.visualizer_color), ScrubberColor.entries, s.visualizerColor, { it.label }, changed = ch("visualizer_color")) { prefs.setVisualizerColor(it) }
 }
 
 @Composable
