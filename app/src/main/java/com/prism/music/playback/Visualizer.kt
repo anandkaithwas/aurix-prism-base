@@ -181,3 +181,75 @@ class Spectrum {
         }
     }
 }
+
+/**
+ * Playback-owned Studio analysis. It samples the audio tap at a modest fixed rate, independent of UI frame rate,
+ * and publishes immutable snapshots for the Studio UI and adaptive effect selector.
+ */
+data class StudioAudioFeatures(
+    val bands: List<Float> = emptyList(),
+    val bass: Float = 0f,
+    val mids: Float = 0f,
+    val highs: Float = 0f,
+    val energy: Float = 0f,
+    val suggestedStyle: com.prism.music.data.prefs.VisualizerStyle = com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC,
+)
+
+object StudioAudioAnalyzer {
+    private val mutableFeatures = kotlinx.coroutines.flow.MutableStateFlow(StudioAudioFeatures())
+    val features: kotlinx.coroutines.flow.StateFlow<StudioAudioFeatures> = mutableFeatures
+    private var job: kotlinx.coroutines.Job? = null
+
+    @Synchronized
+    fun start(scope: kotlinx.coroutines.CoroutineScope) {
+        if (job?.isActive == true) return
+        job = scope.launch(kotlinx.coroutines.Dispatchers.Default) {
+            val spectrum = Spectrum()
+            var previousStyle = com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC
+            var candidate = previousStyle
+            var candidateFrames = 0
+            var energyAverage = 0f
+            while (kotlin.coroutines.coroutineContext.isActive) {
+                val started = android.os.SystemClock.elapsedRealtime()
+                spectrum.update(80f)
+                val bands = spectrum.bands.toList()
+                val bass = bands.take(4).average().toFloat().coerceIn(0f, 1f)
+                val mids = bands.slice(4..13).average().toFloat().coerceIn(0f, 1f)
+                val highs = bands.slice(14..27).average().toFloat().coerceIn(0f, 1f)
+                val energy = bands.average().toFloat().coerceIn(0f, 1f)
+                energyAverage = energyAverage * 0.82f + energy * 0.18f
+                val proposed = when {
+                    bass > 0.68f -> com.prism.music.data.prefs.VisualizerStyle.PARTICLES
+                    bass > 0.48f -> com.prism.music.data.prefs.VisualizerStyle.SPECTRUM_360
+                    highs > mids * 1.3f && highs > 0.22f -> com.prism.music.data.prefs.VisualizerStyle.GEOMETRIC
+                    mids > bass * 1.15f && energyAverage > 0.18f -> com.prism.music.data.prefs.VisualizerStyle.LIQUID
+                    energyAverage < 0.12f -> com.prism.music.data.prefs.VisualizerStyle.GLOW
+                    else -> com.prism.music.data.prefs.VisualizerStyle.FRACTAL
+                }
+                if (proposed == candidate) candidateFrames++ else {
+                    candidate = proposed
+                    candidateFrames = 1
+                }
+                // Require sustained evidence before changing effects; this prevents rapid visual switching.
+                if (candidateFrames >= 8) previousStyle = candidate
+                mutableFeatures.value = StudioAudioFeatures(
+                    bands = bands,
+                    bass = bass,
+                    mids = mids,
+                    highs = highs,
+                    energy = energyAverage,
+                    suggestedStyle = previousStyle,
+                )
+                val elapsed = android.os.SystemClock.elapsedRealtime() - started
+                kotlinx.coroutines.delay((80L - elapsed).coerceAtLeast(1L))
+            }
+        }
+    }
+
+    @Synchronized
+    fun stop() {
+        job?.cancel()
+        job = null
+        mutableFeatures.value = StudioAudioFeatures()
+    }
+}

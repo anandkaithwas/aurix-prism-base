@@ -107,6 +107,16 @@ open class PlaybackService : MediaLibraryService(), Player.Listener {
     private var songLoudness: Float? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
+    /** Starts background analysis only for ordinary music playback; the Studio screen never owns this lifecycle. */
+    private fun updateStudioAnalysis() {
+        val song = player.currentMediaItem?.toSong()
+        val eligible = player.isPlaying && song != null && !song.isEpisode && !song.isLive &&
+            player.currentMediaItem?.videoModeId == null && !c.cast.casting
+        if (eligible) StudioAudioAnalyzer.start(scope) else StudioAudioAnalyzer.stop()
+    }
+
+
+
     private val likeCommand = SessionCommand("prism.LIKE", Bundle.EMPTY)
     private val shuffleCommand = SessionCommand("prism.SHUFFLE", Bundle.EMPTY)
     private val repeatCommand = SessionCommand("prism.REPEAT", Bundle.EMPTY)
@@ -404,6 +414,7 @@ open class PlaybackService : MediaLibraryService(), Player.Listener {
         }
         c.cast.attach(player, object : com.prism.music.connect.Cast.Hooks {
             override fun beforeCasting() {
+                StudioAudioAnalyzer.stop()
                 mix.stopBlend()
                 if (c.sing.onNow) c.sing.setOn(false)
                 // The renderer gets the sound only: a video goes back to the song, and episodes play at 1×.
@@ -564,6 +575,7 @@ open class PlaybackService : MediaLibraryService(), Player.Listener {
     }
 
     override fun onDestroy() {
+        StudioAudioAnalyzer.stop()
         lockScreen.stop()
         if (PlaybackServices.running == this::class.java) PlaybackServices.running = null
         PlaybackServices.failForTest = null
@@ -654,6 +666,7 @@ open class PlaybackService : MediaLibraryService(), Player.Listener {
             }
         }
         trackedSong = song
+        updateStudioAnalysis()
         // For "No repeats this session": heard, however briefly (a quick skip never reaches the history).
         if (!song.isEpisode) c.sessionHeard.note(song, c.queue.counterparts[song.id])
         trackedSource = sourceOf(mediaItem)
@@ -860,6 +873,7 @@ open class PlaybackService : MediaLibraryService(), Player.Listener {
     }
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
+        updateStudioAnalysis()
         if (isPlaying) setNotificationClosed(false)
         PlayTileService.update(this)
         val now = SystemClock.elapsedRealtime()
