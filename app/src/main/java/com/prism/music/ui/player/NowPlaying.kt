@@ -618,7 +618,7 @@ fun NowPlayingScreen(onCollapse: () -> Unit) {
     val storedVizStyle = settings.visualizer
     val vizStyle = if (!aiVisualizer && storedVizStyle == com.prism.music.data.prefs.VisualizerStyle.OFF) com.prism.music.data.prefs.VisualizerStyle.BARS else storedVizStyle
     LaunchedEffect(storedVizStyle, aiVisualizer, isPlaying) {
-        if (!aiVisualizer && isPlaying && storedVizStyle == com.prism.music.data.prefs.VisualizerStyle.OFF) LocalContainer.current.settings.setVisualizer(com.prism.music.data.prefs.VisualizerStyle.BARS)
+        if (!aiVisualizer && isPlaying && storedVizStyle == com.prism.music.data.prefs.VisualizerStyle.OFF) c.settings.setVisualizer(com.prism.music.data.prefs.VisualizerStyle.BARS)
     }
     val viz = rememberVisualizer(
         (aiVisualizer || vizStyle != com.prism.music.data.prefs.VisualizerStyle.OFF) && !settings.reduceMotion && !covered && !videoMode && isPlaying,
